@@ -41,13 +41,13 @@ Open your terminal and connect to the Droplet as the `root` user using its IP ad
 ssh root@YOUR_DROPLET_IP
 ```
 
-### 4. Install and Configure Nginx
+### 4. Install and Configure Apache
 
-1.  **Update your package list and install Nginx:**
+1.  **Update your package list and install Apache:**
 
     ```bash
     apt update
-    apt install nginx -y
+    apt install apache2 -y
     ```
 
 2.  **Create a directory for your website:**
@@ -63,39 +63,41 @@ ssh root@YOUR_DROPLET_IP
     git clone https://github.com/YOUR_GITHUB_USERNAME/YOUR_REPOSITORY.git /var/www/zapp.sytes.net
     ```
 
-4.  **Create an Nginx server block configuration file:**
+4.  **Create an Apache Virtual Host configuration file:**
 
     ```bash
-    nano /etc/nginx/sites-available/zapp.sytes.net
+    nano /etc/apache2/sites-available/zapp.sytes.net.conf
     ```
 
-    Paste the following configuration into the file. This tells Nginx where to find your website files and how to serve them.
+    Paste the following configuration into the file. This tells Apache where to find your website files and how to serve them.
 
-    ```nginx
-    server {
-        listen 80;
-        server_name zapp.sytes.net;
+    ```apache
+    <VirtualHost *:80>
+        ServerName zapp.sytes.net
+        DocumentRoot /var/www/zapp.sytes.net
 
-        root /var/www/zapp.sytes.net;
-        index index.html;
+        <Directory /var/www/zapp.sytes.net>
+            AllowOverride All
+            Require all granted
+        </Directory>
 
-        location / {
-            try_files $uri $uri/ =404;
-        }
-    }
+        ErrorLog ${APACHE_LOG_DIR}/error.log
+        CustomLog ${APACHE_LOG_DIR}/access.log combined
+    </VirtualHost>
     ```
 
-5.  **Enable the server block by creating a symbolic link:**
+5.  **Enable the new site and disable the default site:**
 
     ```bash
-    ln -s /etc/nginx/sites-available/zapp.sytes.net /etc/nginx/sites-enabled/
+    a2ensite zapp.sytes.net.conf
+    a2dissite 000-default.conf
     ```
 
-6.  **Test the Nginx configuration and restart Nginx:**
+6.  **Test the Apache configuration and restart Apache:**
 
     ```bash
-    nginx -t
-    systemctl restart nginx
+    apache2ctl configtest
+    systemctl restart apache2
     ```
 
 ### 5. Configure the Firewall
@@ -103,7 +105,7 @@ ssh root@YOUR_DROPLET_IP
 Allow HTTP and HTTPS traffic through the firewall:
 
 ```bash
-ufw allow 'Nginx Full'
+ufw allow 'Apache Full'
 ```
 
 ### 6. Configure Your DNS
